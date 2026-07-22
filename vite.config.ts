@@ -1,13 +1,22 @@
-const fs = require('fs');
-let code = fs.readFileSync('src/App.tsx', 'utf8');
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import {defineConfig} from 'vite';
 
-// 1. Remove the grid wrappers
-code = code.replace(/<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">/, '<div className="flex flex-col space-y-6">');
-code = code.replace(/\{\/\* Left Module - Indices & Exchange Rates \*\/\}\n\s*<div className="lg:col-span-2 space-y-6">/, '');
-code = code.replace(/\{\/\* Right Module: Calendars & Stock News Feed \*\/\}\n\s*<div className="space-y-6">/, '');
-
-// 2. Fix fragments
-code = code.replace(/<\/div>\n\s*\{\/\* Right Module: Calendars & Stock News Feed \*\/\}/, '{/* Right Module */}');
-code = code.replace(/<\/section>\n\s*<\/div>\n\s*<\/div>\n\s*\{\/\* Footer \*\/\}/, '</section>\n      </div>\n      {/* Footer */}');
-
-// Let's actually just undo my previous bad replacements and do it properly.
+export default defineConfig(() => {
+  return {
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        '@': path.resolve(process.cwd(), '.'),
+      },
+    },
+    server: {
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
+      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      hmr: process.env.DISABLE_HMR !== 'true',
+      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
+      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+  };
+});

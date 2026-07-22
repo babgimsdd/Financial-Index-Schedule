@@ -1,35 +1,17 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-const regex = /const getEventsForDay = \(dayNum: number, month: number, year: number\) => \{[\s\S]*?return \{ economic, holidays \};\n  \};/;
-const replacement = `const getEventsForDay = (dayNum: number, month: number, year: number) => {
-    if (!data) return { economic: [], holidays: [] };
-    
-    let economic: EconomicEvent[] = [];
-    let holidays: MarketCalendar[] = [];
-    
-    economic = data.economicEvents.filter((evt: any) => {
-      if (evt.rawDate) {
-        const d = new Date(evt.rawDate);
-        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === dayNum;
-      }
-      return false;
-    });
-    
-    holidays = data.marketCalendar.filter((cal: any) => {
-      if (cal.rawDate) {
-        const d = new Date(cal.rawDate);
-        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === dayNum;
-      }
-      return false;
-    });
-    
-    return { economic, holidays };
-  };`;
-code = code.replace(regex, replacement);
+// Wrap sections with condition
+code = code.replace(/\{\/\* Forex Section - Top Banner \*\/\}/, '<!-- HOME TAB -->\n      {activeTab === "home" && (<>\n      {/* Forex Section - Top Banner */}');
 
-// Remove parseDayFromMarketCalendar if it exists since we don't need it
-const parseRegex = /const parseDayFromMarketCalendar = \(dateStr: string\) => \{[\s\S]*?\n  \};\n/;
-code = code.replace(parseRegex, '');
+code = code.replace(/\{\/\* Futures Section \*\/\}/, '      </>)}\n      <!-- FUTURES TAB -->\n      {activeTab === "futures" && (<>\n      {/* Futures Section */}');
+
+code = code.replace(/\{\/\* Global Stock Indices Block \*\/\}/, '      </>)}\n      <!-- INDICES TAB -->\n      {activeTab === "home" && (<>\n      {/* Global Stock Indices Block */}');
+
+code = code.replace(/\{\/\* Economic Calendar Tables \*\/\}/, '      </>)}\n      <!-- CALENDAR TAB -->\n      {activeTab === "calendar" && (<>\n      {/* Economic Calendar Tables */}');
+
+code = code.replace(/\{\/\* Market Calendars \*\/\}/, '      </>)}\n      <!-- CALENDAR TAB CONT -->\n      {activeTab === "calendar" && (<>\n      {/* Market Calendars */}');
+
+code = code.replace(/\{\/\* Quick FAQ \/ Helper Block \*\/\}/, '      </>)}\n      <!-- HOME TAB CONT -->\n      {activeTab === "home" && (<>\n      {/* Quick FAQ / Helper Block */}');
 
 fs.writeFileSync('src/App.tsx', code);

@@ -1,6 +1,12 @@
-<?xml version='1.0' encoding='utf-8'?>
-<widget version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <access origin="*" />
-  
-  
-</widget>
+const fs = require('fs');
+let code = fs.readFileSync('server.ts', 'utf8');
+
+const regex = /function getAbsoluteDateOfCurrentWeek\(weekday: number\): Date \{.*?return targetDate;\n\}/s;
+const replacement = `function getAbsoluteDateOfCurrentWeek(weekday: number): Date {
+  // Force the base week to be July 13, 2026 - July 17, 2026 based on user prompt
+  const targetDate = new Date(2026, 6, 12 + weekday); 
+  return targetDate;
+}`;
+
+code = code.replace(regex, replacement);
+fs.writeFileSync('server.ts', code);

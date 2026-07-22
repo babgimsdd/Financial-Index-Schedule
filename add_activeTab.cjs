@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
+const fs = require('fs');
+let code = fs.readFileSync('src/App.tsx', 'utf8');
+
+if (!code.includes('const [activeTab')) {
+  code = code.replace(/const \[loading, setLoading\] = useState\(true\);/, 'const [activeTab, setActiveTab] = useState("home");\n  const [loading, setLoading] = useState(true);');
+  fs.writeFileSync('src/App.tsx', code);
+}

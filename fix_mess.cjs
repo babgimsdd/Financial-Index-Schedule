@@ -1,6 +1,15 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-code = code.replace(/          <\/div>\n                    <\/div>\n          \{\/\* Desktop Navigation \& Options \*\/\}/, '          </div>\n          {/* Desktop Navigation & Options */}');
+const target = `        )}
+        {activeTab === "calendar" && (
+        {/* Right Module: Calendars & Stock News Feed */}
+        {/* Market Calendars */}
+          )}
+        {activeTab === "calendar" && (`;
 
+const replace = `        )}
+        {activeTab === "calendar" && (`;
+
+code = code.replace(target, replace);
 fs.writeFileSync('src/App.tsx', code);

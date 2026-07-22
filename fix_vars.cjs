@@ -1,43 +1,30 @@
-const CACHE_NAME = "finance-dashboard-v1";
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon.png",
-  "/icon-192.png",
-  "/icon-512.png"
-];
+const fs = require('fs');
+let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
-});
+const replacement = `
+  const prevDataRef = useRef<any | null>(null);
+  const dict = uiTranslations[lang];
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
-  );
-});
+  useEffect(() => {
+    // Basic detection for iOS & standalone PWA
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+      setIsStandalone(true);
+    }
+  }, []);
 
-self.addEventListener("fetch", (e) => {
-  // Skip API caching to guarantee fresh market numbers
-  if (e.request.url.includes("/api/")) {
-    return;
-  }
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      return cachedResponse || fetch(e.request);
-    })
-  );
-});
+  const handleInstallApp = () => {
+    alert(lang === "ko" ? "사파리 하단의 '공유' 버튼을 누르고 '홈 화면에 추가'를 선택하세요." : "Tap the Share button at the bottom of Safari, then select 'Add to Home Screen'.");
+  };
+
+  const handleDismissBanner = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem("pwa_dismissed", "true");
+  };
+`;
+
+code = code.replace(/  const \[isStandalone, setIsStandalone\] = useState<boolean>\(false\);/, '  const [isStandalone, setIsStandalone] = useState<boolean>(false);\n' + replacement);
+
+fs.writeFileSync('src/App.tsx', code);

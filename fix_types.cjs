@@ -1,20 +1,7 @@
-{
-  "name": "Global Finance Pro",
-  "short_name": "Global Fin",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#10b981",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+const fs = require('fs');
+let code = fs.readFileSync('server.ts', 'utf8');
+
+code = code.replace(/  customDay\?: number;\n\}/, '  customDay?: number;\n  rawDate?: string;\n}');
+code = code.replace(/  event: string;\n  result\?: string;\n\}/, '  event: string;\n  result?: string;\n  rawDate?: string;\n}');
+
+fs.writeFileSync('server.ts', code);
