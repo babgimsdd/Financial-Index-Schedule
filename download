@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+build/
+out/
+.vite/
+
+# Temporary / Log files
+*.log
+.DS_Store
+*.cjs
+output*.json
+fresh_state.json
+test.json
+patch.diff
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Android build artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+
+# Testing
+coverage/
