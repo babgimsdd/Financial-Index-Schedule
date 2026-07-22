@@ -1,5 +1,5 @@
-{
-	"appId": "com.finance.dashboard",
-	"appName": "Finance Dashboard",
-	"webDir": "dist"
-}
+package com.finance.dashboard;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

@@ -1,53 +1,59 @@
-const fs = require('fs');
-let code = fs.readFileSync('src/App.tsx', 'utf8');
+ext {
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'
+    cordovaAndroidVersion = project.hasProperty('cordovaAndroidVersion') ? rootProject.ext.cordovaAndroidVersion : '14.0.1'
+}
 
-// 1. Remove all `{activeTab === "..." && (` and `)}` and `</>)}` to reset state
-code = code.replace(/\{activeTab === "home" && \(\n/g, '');
-code = code.replace(/\{activeTab === "futures" && \(\n/g, '');
-code = code.replace(/\{activeTab === "calendar" && \(\n/g, '');
-code = code.replace(/\n\s*\)\}\n/g, '\n');
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
 
-// 2. Wrap each section correctly
-code = code.replace(
-  '{/* Forex Section - Top Banner */}',
-  '{activeTab === "home" && (<>\n      {/* Forex Section - Top Banner */}'
-);
+apply plugin: 'com.android.library'
 
-code = code.replace(
-  '{/* Main Content Grid */}',
-  '</>)}\n      {/* Main Content Grid */}'
-);
+android {
+    namespace = "capacitor.cordova.android.plugins"
+    compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
+        versionCode 1
+        versionName "1.0"
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
 
-code = code.replace(
-  '{/* Futures Section */}',
-  '{activeTab === "futures" && (<>\n          {/* Futures Section */}'
-);
+repositories {
+    google()
+    mavenCentral()
+    flatDir{
+        dirs 'src/main/libs', 'libs'
+    }
+}
 
-code = code.replace(
-  '{/* Global Stock Indices Block */}',
-  '</>)}\n        {activeTab === "home" && (<>\n          {/* Global Stock Indices Block */}'
-);
+dependencies {
+    implementation fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "org.apache.cordova:framework:$cordovaAndroidVersion"
+    // SUB-PROJECT DEPENDENCIES START
 
-code = code.replace(
-  '{/* Economic Calendar Tables */}',
-  '</>)}\n        {activeTab === "calendar" && (<>\n          {/* Economic Calendar Tables */}'
-);
+    // SUB-PROJECT DEPENDENCIES END
+}
 
-// Note: { /* Market Calendars */ } is currently orphaned or inside the Right Module comment. Let's see what's above it.
-code = code.replace(
-  '{/* Right Module: Calendars & Stock News Feed */}',
-  '</>)}\n        {activeTab === "calendar" && (<>\n        {/* Right Module: Calendars & Stock News Feed */}'
-);
+// PLUGIN GRADLE EXTENSIONS START
+apply from: "cordova.variables.gradle"
+// PLUGIN GRADLE EXTENSIONS END
 
-code = code.replace(
-  '{/* Quick FAQ / Helper Block */}',
-  '</>)}\n        {activeTab === "home" && (<>\n          {/* Quick FAQ / Helper Block */}'
-);
-
-code = code.replace(
-  '      </div>\n\n      {/* Footer */}',
-  '        </>)}\n      </div>\n\n      {/* Footer */}'
-);
-
-
-fs.writeFileSync('src/App.tsx', code);
+for (def func : cdvPluginPostBuildExtras) {
+    func()
+}

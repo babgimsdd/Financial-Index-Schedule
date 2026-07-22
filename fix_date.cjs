@@ -1,7 +1,6 @@
-const fs = require('fs');
-let code = fs.readFileSync('src/App.tsx', 'utf8');
-
-const regex = /\s*<div className="shrink-0 opacity-70">\s*\{drawMicroSparkline\(sparkHistory, isPos\)\}\s*<\/div>/g;
-code = code.replace(regex, '');
-
-fs.writeFileSync('src/App.tsx', code);
+<?xml version='1.0' encoding='utf-8'?>
+<widget version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <access origin="*" />
+  
+  
+</widget>
