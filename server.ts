@@ -550,19 +550,23 @@ function getFormattedFutureDateInCurrentMonth(dayOffsetFromToday: number, lang: 
 }
 
 function getAbsoluteDateOfCurrentWeek(weekday: number): Date {
-  // Force the base week to be July 13, 2026 - July 17, 2026 based on user prompt
-  const targetDate = new Date(2026, 6, 12 + weekday); 
-  return targetDate;
+  const now = new Date();
+  const dayOfWeek = now.getDay(); 
+  const distanceToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + distanceToMonday);
+  return new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + (weekday - 1));
 }
 
 const adjustAllDatesToCurrentWeek = () => {
   const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
   Object.keys(marketStates).forEach(lang => {
     const state = marketStates[lang];
     
     state.economicEvents.forEach((evt: any) => {
       if (evt.isRealTime) {
-        // For real-time synced economic events, respect the actual dates from Gemini search
         if (evt.rawDate) {
           const eventDate = new Date(evt.rawDate);
           evt.year = eventDate.getFullYear();
@@ -579,7 +583,7 @@ const adjustAllDatesToCurrentWeek = () => {
       
       let eventDate: Date;
       if (evt.customDay !== undefined) {
-        eventDate = new Date(2026, 6, evt.customDay); // 6 is July (0-indexed)
+        eventDate = new Date(currentYear, currentMonth, evt.customDay);
       } else {
         eventDate = getAbsoluteDateOfCurrentWeek(evt.weekday || 1);
       }
@@ -610,7 +614,6 @@ const adjustAllDatesToCurrentWeek = () => {
       evt.month = eventDate.getMonth();
       evt.day = eventDate.getDate();
 
-      // If event date and time are in the past relative to now, set the actual value
       if (eventDate.getTime() < now.getTime()) {
         evt.actual = evt.actualVal || "-";
       } else {
@@ -618,16 +621,14 @@ const adjustAllDatesToCurrentWeek = () => {
       }
     });
 
-    // Do NOT dynamically override marketCalendar dates, as they are pre-configured to highly accurate, real-world July 2026 event dates (like Samsung Electronics on July 7th)
-    // However, if a market calendar event date has already passed, replace future-tense terms like 'Scheduled' or '예정' with past/neutral terms.
     state.marketCalendar.forEach((cal: any) => {
       const match = cal.date.match(/(\d{2})\/(\d{2})/);
       if (match) {
-        const monthNum = parseInt(match[1], 10) - 1; // July is 6
+        const monthNum = parseInt(match[1], 10) - 1; 
         const dayNum = parseInt(match[2], 10);
-        const eventDate = new Date(2026, monthNum, dayNum, 23, 59, 59);
-        cal.rawDate = new Date(2026, monthNum, dayNum).toISOString();
-        cal.year = 2026;
+        const eventDate = new Date(currentYear, monthNum, dayNum, 23, 59, 59);
+        cal.rawDate = new Date(currentYear, monthNum, dayNum).toISOString();
+        cal.year = currentYear;
         cal.month = monthNum;
         cal.day = dayNum;
         
@@ -656,7 +657,6 @@ const adjustAllDatesToCurrentWeek = () => {
               .replace(/Upcoming/gi, "Completed");
           }
 
-          // Generate a highly realistic result field for display!
           const text = cal.event.toLowerCase();
           if (text.includes("삼성") || text.includes("samsung") || text.includes("サムスン")) {
             cal.result = lang === "ko" ? "영업이익 10.4조 원 기록 (전년 동기 대비 1,452.2% 급증, 어닝 서프라이즈)"
@@ -694,7 +694,6 @@ const adjustAllDatesToCurrentWeek = () => {
                        : lang === "zh" ? "「海洋之日」放假，休市一天"
                        : "Tokyo market closed in observance of Marine Day";
           } else {
-            // General fallback results for any other completed events
             cal.result = lang === "ko" ? "공식 발표 완료 및 주요 시장 지표 정상 반영"
                        : lang === "ja" ? "公式発表完了、市場データ正常反映"
                        : lang === "zh" ? "正式公布完毕，核心指标已反应"
@@ -707,64 +706,65 @@ const adjustAllDatesToCurrentWeek = () => {
 };
 
 const fetchLiveFromPublicAPIs = async () => {
-  console.log("Fetching live, copyright-safe market data from public APIs...");
+  console.log("Fetching live market data from public APIs...");
 
-  // 1. Fetch Forex from Frankfurter API (100% free, open-source, no key)
-  try {
-    const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR,KRW,JPY");
-    if (res.ok) {
-      const data = await res.json();
-      const usd_krw = data.rates.KRW;
-      const usd_eur = data.rates.EUR;
-      const usd_jpy = data.rates.JPY;
-      const jpy_krw_100 = parseFloat(((usd_krw / usd_jpy) * 100).toFixed(2));
-      const eur_usd = parseFloat((1 / usd_eur).toFixed(4));
-      const eur_krw = parseFloat((eur_usd * usd_krw).toFixed(2));
+  // 1. Fetch Forex from Frankfurter API
+  const forexPromise = (async () => {
+    try {
+      const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR,KRW,JPY");
+      if (res.ok) {
+        const data = await res.json();
+        const usd_krw = data.rates.KRW;
+        const usd_eur = data.rates.EUR;
+        const usd_jpy = data.rates.JPY;
+        const jpy_krw_100 = parseFloat(((usd_krw / usd_jpy) * 100).toFixed(2));
+        const eur_usd = parseFloat((1 / usd_eur).toFixed(4));
+        const eur_krw = parseFloat((eur_usd * usd_krw).toFixed(2));
 
-      Object.keys(marketStates).forEach(lang => {
-        const state = marketStates[lang];
-        const eurKrwObj = state.forex.find(f => f.pair === "EUR/KRW");
-        const usdKrwObj = state.forex.find(f => f.pair === "USD/KRW");
-        const jpyKrwObj = state.forex.find(f => f.pair === "JPY/KRW");
+        Object.keys(marketStates).forEach(lang => {
+          const state = marketStates[lang];
+          const eurKrwObj = state.forex.find(f => f.pair === "EUR/KRW");
+          const usdKrwObj = state.forex.find(f => f.pair === "USD/KRW");
+          const jpyKrwObj = state.forex.find(f => f.pair === "JPY/KRW");
 
-        if (eurKrwObj) {
-          const old = eurKrwObj.price;
-          eurKrwObj.price = eur_krw;
-          eurKrwObj.change = parseFloat((eur_krw - (old || eur_krw)).toFixed(2));
-          eurKrwObj.changePercent = parseFloat(((eurKrwObj.change / (eur_krw - eurKrwObj.change)) * 100).toFixed(2)) || 0;
-        }
-        if (usdKrwObj) {
-          const old = usdKrwObj.price;
-          usdKrwObj.price = usd_krw;
-          usdKrwObj.change = parseFloat((usd_krw - (old || usd_krw)).toFixed(2));
-          usdKrwObj.changePercent = parseFloat(((usdKrwObj.change / (usd_krw - usdKrwObj.change)) * 100).toFixed(2)) || 0;
-        }
-        if (jpyKrwObj) {
-          const old = jpyKrwObj.price;
-          jpyKrwObj.price = jpy_krw_100;
-          jpyKrwObj.change = parseFloat((jpy_krw_100 - (old || jpy_krw_100)).toFixed(2));
-          jpyKrwObj.changePercent = parseFloat(((jpyKrwObj.change / (jpy_krw_100 - jpyKrwObj.change)) * 100).toFixed(2)) || 0;
-        }
-      });
-      console.log("Successfully updated Forex from Frankfurter API.");
+          if (eurKrwObj) {
+            const old = eurKrwObj.price;
+            eurKrwObj.price = eur_krw;
+            eurKrwObj.change = parseFloat((eur_krw - (old || eur_krw)).toFixed(2));
+            eurKrwObj.changePercent = parseFloat(((eurKrwObj.change / (eur_krw - eurKrwObj.change)) * 100).toFixed(2)) || 0;
+          }
+          if (usdKrwObj) {
+            const old = usdKrwObj.price;
+            usdKrwObj.price = usd_krw;
+            usdKrwObj.change = parseFloat((usd_krw - (old || usd_krw)).toFixed(2));
+            usdKrwObj.changePercent = parseFloat(((usdKrwObj.change / (usd_krw - usdKrwObj.change)) * 100).toFixed(2)) || 0;
+          }
+          if (jpyKrwObj) {
+            const old = jpyKrwObj.price;
+            jpyKrwObj.price = jpy_krw_100;
+            jpyKrwObj.change = parseFloat((jpy_krw_100 - (old || jpy_krw_100)).toFixed(2));
+            jpyKrwObj.changePercent = parseFloat(((jpyKrwObj.change / (jpy_krw_100 - jpyKrwObj.change)) * 100).toFixed(2)) || 0;
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Forex Frankfurter API fetch failed:", e);
     }
-  } catch (e) {
-    console.error("Forex Frankfurter API fetch failed:", e);
-  }
+  })();
 
-  // 2. Fetch Global Index Futures from Yahoo Finance (100% free, public charts API)
-  try {
-    const futuresMap = [
-      { symbol: "ES=F", key: "ES=F" },
-      { symbol: "NQ=F", key: "NQ=F" },
-      { symbol: "YM=F", key: "YM=F" },
-      { symbol: "NK=F", key: "NK=F" },
-      { symbol: "GC=F", key: "GC=F" },
-      { symbol: "CL=F", key: "CL=F" },
-      { symbol: "NG=F", key: "NG=F" }
-    ];
+  // 2. Fetch Futures parallel
+  const futuresMap = [
+    { symbol: "ES=F", key: "ES=F" },
+    { symbol: "NQ=F", key: "NQ=F" },
+    { symbol: "YM=F", key: "YM=F" },
+    { symbol: "NK=F", key: "NK=F" },
+    { symbol: "GC=F", key: "GC=F" },
+    { symbol: "CL=F", key: "CL=F" },
+    { symbol: "NG=F", key: "NG=F" }
+  ];
 
-    for (const item of futuresMap) {
+  const futuresPromise = Promise.all(futuresMap.map(async (item) => {
+    try {
       const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${item.symbol}?interval=1d&range=1d`, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -789,28 +789,27 @@ const fetchLiveFromPublicAPIs = async () => {
           });
         }
       }
+    } catch (e) {
+      console.error(`Futures fetch failed for ${item.symbol}:`, e);
     }
-    console.log("Successfully updated Futures prices from Yahoo Finance.");
-  } catch (e) {
-    console.error("Yahoo Finance futures fetch failed:", e);
-  }
+  }));
 
-  // 3. Fetch Global Stock Indices from Yahoo Finance (100% free, public charts API)
-  try {
-    const indicesMap = [
-      { symbol: "^GSPC", key: "SPX" },
-      { symbol: "^IXIC", key: "IXIC" },
-      { symbol: "^DJI", key: "DJI" },
-      { symbol: "^KS11", key: "KS11" },
-      { symbol: "^KQ11", key: "KQ11" },
-      { symbol: "^N225", key: "N225" },
-      { symbol: "^HSI", key: "HSI" },
-      { symbol: "000001.SS", key: "SSEC" },
-      { symbol: "^GDAXI", key: "GDAXI" },
-      { symbol: "^FTSE", key: "FTSE" }
-    ];
+  // 3. Fetch Indices parallel
+  const indicesMap = [
+    { symbol: "^GSPC", key: "SPX" },
+    { symbol: "^IXIC", key: "IXIC" },
+    { symbol: "^DJI", key: "DJI" },
+    { symbol: "^KS11", key: "KS11" },
+    { symbol: "^KQ11", key: "KQ11" },
+    { symbol: "^N225", key: "N225" },
+    { symbol: "^HSI", key: "HSI" },
+    { symbol: "000001.SS", key: "SSEC" },
+    { symbol: "^GDAXI", key: "GDAXI" },
+    { symbol: "^FTSE", key: "FTSE" }
+  ];
 
-    for (const item of indicesMap) {
+  const indicesPromise = Promise.all(indicesMap.map(async (item) => {
+    try {
       const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${item.symbol}?interval=1d&range=1d`, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -821,9 +820,9 @@ const fetchLiveFromPublicAPIs = async () => {
         const result = data.chart?.result?.[0];
         if (result && result.meta) {
           const price = parseFloat(result.meta.regularMarketPrice);
-          const previousClose = parseFloat(result.meta.chartPreviousClose);
+          const previousClose = parseFloat(result.meta.chartPreviousClose || result.meta.previousClose || price);
           const change = parseFloat((price - previousClose).toFixed(2));
-          const changePercent = parseFloat(((change / previousClose) * 100).toFixed(2));
+          const changePercent = parseFloat(((change / previousClose) * 100).toFixed(2)) || 0;
 
           Object.keys(marketStates).forEach(lang => {
             const indItem = marketStates[lang].indices.find(i => i.symbol === item.key);
@@ -835,13 +834,12 @@ const fetchLiveFromPublicAPIs = async () => {
           });
         }
       }
+    } catch (e) {
+      console.error(`Indices fetch failed for ${item.symbol}:`, e);
     }
-    console.log("Successfully updated Indices from Yahoo Finance.");
-  } catch (e) {
-    console.error("Yahoo Finance indices fetch failed:", e);
-  }
+  }));
 
-  // 4. Fetch localized news from Google News RSS feeds targeting US/European markets specifically
+  // 4. News RSS parallel
   const queryLangs: Record<string, { query: string; hl: string; gl: string; ceid: string }> = {
     ko: { query: "미국+증시+유럽+증시+뉴욕+증시", hl: "ko", gl: "KR", ceid: "KR:ko" },
     en: { query: "US+stocks+European+markets+Wall+Street", hl: "en-US", gl: "US", ceid: "US:en" },
@@ -849,7 +847,7 @@ const fetchLiveFromPublicAPIs = async () => {
     zh: { query: "美股+欧股+纽约+股市", hl: "zh-CN", gl: "CN", ceid: "CN:zh-hans" }
   };
 
-  for (const [lang, config] of Object.entries(queryLangs)) {
+  const newsPromise = Promise.all(Object.entries(queryLangs).map(async ([lang, config]) => {
     try {
       const res = await fetch(`https://news.google.com/rss/search?q=${config.query}&hl=${config.hl}&gl=${config.gl}&ceid=${config.ceid}`, {
         headers: {
@@ -866,9 +864,10 @@ const fetchLiveFromPublicAPIs = async () => {
     } catch (e) {
       console.error(`Google News RSS fetch failed for [${lang}]:`, e);
     }
-  }
+  }));
 
-  // Set isSimulated = false globally since we successfully populated with real-world data!
+  await Promise.all([forexPromise, futuresPromise, indicesPromise, newsPromise]);
+
   Object.keys(marketStates).forEach(lang => {
     marketStates[lang].isSimulated = false;
   });
@@ -964,11 +963,20 @@ const tickLivePrices = () => {
 
 
 
-// Tick every 2 seconds for ultra-fast visual micro-animations
-setInterval(tickLivePrices, 2000);
+// Fetch immediately on startup, then every 60 seconds
+fetchLiveFromPublicAPIs().then(() => {
+  adjustAllDatesToCurrentWeek();
+  seedAllHistories();
+  console.log("Initial real-time financial market fetch complete.");
+}).catch(err => {
+  console.error("Initial market fetch failed:", err);
+});
 
-// Fetch fresh real-world values from public APIs every 60 seconds (1 minute) to anchor prices and load live news
-setInterval(fetchLiveFromPublicAPIs, 60000);
+setInterval(tickLivePrices, 2000);
+setInterval(async () => {
+  await fetchLiveFromPublicAPIs();
+  adjustAllDatesToCurrentWeek();
+}, 60000);
 
 function isDateInPast(dateStr: string): boolean {
   try {
@@ -1522,9 +1530,23 @@ app.get("/api/finance/search", async (req, res) => {
   }
 });
 
-app.get("/api/finance/data", (req, res) => {
+let lastPublicApiFetchTime = 0;
+
+app.get("/api/finance/data", async (req, res) => {
   const requestedLang = (req.query.lang as string || "ko").toLowerCase();
   const lang = ["ko", "en", "ja", "zh"].includes(requestedLang) ? requestedLang : "ko";
+
+  // If initial load or data older than 30s or simulated, refresh from public APIs
+  const now = Date.now();
+  if (now - lastPublicApiFetchTime > 30000 || marketStates[lang].isSimulated) {
+    try {
+      await fetchLiveFromPublicAPIs();
+      adjustAllDatesToCurrentWeek();
+      lastPublicApiFetchTime = Date.now();
+    } catch (e) {
+      console.error("Error refreshing live data in /api/finance/data:", e);
+    }
+  }
 
   // Trigger lazy refresh in background if cache expired
   fetchFromGemini(lang);
@@ -1539,6 +1561,14 @@ app.get("/api/finance/data", (req, res) => {
 app.get("/api/finance/refresh", async (req, res) => {
   const requestedLang = (req.query.lang as string || "ko").toLowerCase();
   const lang = ["ko", "en", "ja", "zh"].includes(requestedLang) ? requestedLang : "ko";
+
+  try {
+    await fetchLiveFromPublicAPIs();
+    adjustAllDatesToCurrentWeek();
+    lastPublicApiFetchTime = Date.now();
+  } catch (e) {
+    console.error("Error in /api/finance/refresh:", e);
+  }
 
   // Force reset cache
   lastGeminiFetchTimes[lang] = 0;
