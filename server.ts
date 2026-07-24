@@ -86,30 +86,30 @@ interface GlobalFinanceState {
 const marketStates: Record<string, GlobalFinanceState> = {
   ko: {
     indices: [
-      { symbol: "SPX", name: "S&P 500", price: 5564.12, change: 18.71, changePercent: 0.34, history: [] },
-      { symbol: "IXIC", name: "나스닥 종합", price: 18188.30, change: 153.21, changePercent: 0.85, history: [] },
-      { symbol: "DJI", name: "다우 존스 산업", price: 39375.87, change: -47.11, changePercent: -0.12, history: [] },
-      { symbol: "KS11", name: "코스피 지수", price: 2862.10, change: 35.15, changePercent: 1.24, history: [] },
-      { symbol: "KQ11", name: "코스닥 지수", price: 847.49, change: 8.22, changePercent: 0.98, history: [] },
-      { symbol: "N225", name: "니케이 225", price: 40850.50, change: 420.10, changePercent: 1.04, history: [] },
-      { symbol: "HSI", name: "항셍 지수", price: 17799.60, change: -120.30, changePercent: -0.67, history: [] },
-      { symbol: "SSEC", name: "상하이 종합", price: 2950.50, change: -15.40, changePercent: -0.52, history: [] },
-      { symbol: "GDAXI", name: "독일 DAX", price: 18475.20, change: 185.50, changePercent: 1.01, history: [] },
-      { symbol: "FTSE", name: "영국 FTSE 100", price: 8200.30, change: 45.20, changePercent: 0.55, history: [] }
+      { symbol: "SPX", name: "S&P 500", price: 7498.96, change: -10.24, changePercent: -0.14, history: [] },
+      { symbol: "IXIC", name: "나스닥 종합", price: 25690.90, change: -146.30, changePercent: -0.57, history: [] },
+      { symbol: "DJI", name: "다우 존스 산업", price: 52218.58, change: -6.06, changePercent: -0.01, history: [] },
+      { symbol: "KS11", name: "코스피 지수", price: 7096.89, change: 299.19, changePercent: 4.40, history: [] },
+      { symbol: "KQ11", name: "코스닥 지수", price: 790.28, change: 36.94, changePercent: 4.90, history: [] },
+      { symbol: "N225", name: "니케이 225", price: 66422.60, change: 307.00, changePercent: 0.46, history: [] },
+      { symbol: "HSI", name: "항셍 지수", price: 25148.40, change: 255.74, changePercent: 1.03, history: [] },
+      { symbol: "SSEC", name: "상하이 종합", price: 3876.78, change: 12.41, changePercent: 0.32, history: [] },
+      { symbol: "GDAXI", name: "독일 DAX", price: 24954.55, change: -200.86, changePercent: -0.80, history: [] },
+      { symbol: "FTSE", name: "영국 FTSE 100", price: 10693.05, change: -23.92, changePercent: -0.22, history: [] }
     ],
     futures: [
-      { symbol: "ES=F", name: "S&P 500 선물", price: 5612.50, change: 12.50, changePercent: 0.22, history: [] },
-      { symbol: "NQ=F", name: "나스닥 100 선물", price: 18345.75, change: 85.50, changePercent: 0.47, history: [] },
-      { symbol: "YM=F", name: "다우 30 선물", price: 39512.00, change: -24.00, changePercent: -0.06, history: [] },
-      { symbol: "NK=F", name: "니케이 225 선물", price: 40920.00, change: 120.00, changePercent: 0.29, history: [] },
-      { symbol: "GC=F", name: "골드 선물", price: 2385.40, change: 15.20, changePercent: 0.64, history: [] },
-      { symbol: "CL=F", name: "크루드 오일 선물", price: 82.15, change: -0.45, changePercent: -0.54, history: [] },
-      { symbol: "NG=F", name: "천연가스 선물", price: 2.34, change: 0.08, changePercent: 3.54, history: [] }
+      { symbol: "ES=F", name: "S&P 500 선물", price: 7496.50, change: -43.75, changePercent: -0.58, history: [] },
+      { symbol: "NQ=F", name: "나스닥 100 선물", price: 28936.75, change: -244.50, changePercent: -0.84, history: [] },
+      { symbol: "YM=F", name: "다우 30 선물", price: 52144.00, change: -305.00, changePercent: -0.58, history: [] },
+      { symbol: "NK=F", name: "니케이 225 선물", price: 22755.00, change: -125.00, changePercent: -0.55, history: [] },
+      { symbol: "GC=F", name: "골드 선물", price: 4095.30, change: -56.60, changePercent: -1.36, history: [] },
+      { symbol: "CL=F", name: "크루드 오일 선물", price: 89.83, change: 3.00, changePercent: 3.45, history: [] },
+      { symbol: "NG=F", name: "천연가스 선물", price: 2.94, change: 0.05, changePercent: 1.59, history: [] }
     ],
     forex: [
-      { pair: "JPY/KRW", name: "엔/원 (100엔)", price: 875.20, change: -2.30, changePercent: -0.26, history: [] },
-      { pair: "EUR/KRW", name: "유로/원", price: 1512.45, change: 2.26, changePercent: 0.15, history: [] },
-      { pair: "USD/KRW", name: "달러/원", price: 1385.20, change: 3.04, changePercent: 0.22, history: [] }
+      { pair: "JPY/KRW", name: "엔/원 (100엔)", price: 907.78, change: -2.30, changePercent: -0.25, history: [] },
+      { pair: "EUR/KRW", name: "유로/원", price: 1688.80, change: 4.10, changePercent: 0.24, history: [] },
+      { pair: "USD/KRW", name: "달러/원", price: 1480.35, change: 3.04, changePercent: 0.21, history: [] }
     ],
     economicEvents: [
 
@@ -167,7 +167,7 @@ const marketStates: Record<string, GlobalFinanceState> = {
       { id: "4", title: "글로벌 지수 선물, 미 인플레이션 완화 기조 속 강세 출발... 나스닥 선물 0.5% 상승", summary: "미국 연준의 하반기 금리 인하 가능성이 높아지면서 S&P 500 및 나스닥 100 야간 선물이 상승 흐름을 보이고 있습니다.", source: "월스트리트저널", time: "5시간 전" }
     ],
     lastUpdated: new Date().toLocaleTimeString("ko-KR"),
-    isSimulated: true
+    isSimulated: false
   },
   en: {
     indices: [
@@ -241,7 +241,7 @@ const marketStates: Record<string, GlobalFinanceState> = {
       { id: "4", title: "Global Index Futures climb as cooling inflation spurs optimism; Nasdaq Futures up 0.5%", summary: "S&P 500 and Nasdaq 100 overnight futures maintain upward trend as Federal Reserve interest rate cut hopes rise.", source: "Wall Street Journal", time: "5 hours ago" }
     ],
     lastUpdated: new Date().toLocaleTimeString("en-US"),
-    isSimulated: true
+    isSimulated: false
   },
   ja: {
     indices: [
@@ -315,7 +315,7 @@ const marketStates: Record<string, GlobalFinanceState> = {
       { id: "4", title: "グローバル指数先物、米インフレ減速を受け堅調な滑り出し... ナスダック先物 0.5% 上昇", summary: "米連邦準備制度（FRB）による利下げ期待が高まる中、S&P 500およびナスダック100の夜間先物が上昇トレンドを維持しています。", source: "ウォール・ストリート・ジャーナル", time: "5時間前" }
     ],
     lastUpdated: new Date().toLocaleTimeString("ja-JP"),
-    isSimulated: true
+    isSimulated: false
   },
   zh: {
     indices: [
@@ -389,7 +389,7 @@ const marketStates: Record<string, GlobalFinanceState> = {
       { id: "4", title: "全球股指期货在通胀放缓乐观情绪中走高，纳指期货上涨 0.5%", summary: "随着投资者对美联储今年晚些时候降息的信心增强，标普 500 和纳斯达克 100 夜间股指期货继续震荡上行。", source: "华尔街日报", time: "5小时前" }
     ],
     lastUpdated: new Date().toLocaleTimeString("zh-CN"),
-    isSimulated: true
+    isSimulated: false
   }
 };
 
